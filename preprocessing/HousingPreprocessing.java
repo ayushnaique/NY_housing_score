@@ -126,7 +126,7 @@ public class HousingPreprocessing {
             }
 
             for(int i=0; i<fields.length; i++) {
-                context.write(new IntWritable(1), value); // Emit Text along with the total parts, ideally should be 3 or 1
+                context.write(new IntWritable(fields.length), value); // Emit Text along with the total parts, ideally should be 3 or 1
             }
         }
     }
@@ -143,7 +143,7 @@ public class HousingPreprocessing {
             } else if(key.get() == 3) {
                 for (Text value : values) {
                     // Clean the quoted data, remove all commas
-                    String cleanedString = value.split("\"")[1].replaceAll(",", "");
+                    String cleanedString = value.toString().split("\"")[1].replaceAll(",", "");
                     // make lower case
                     cleanedString = cleanedString.toLowerCase();
                     context.write(new Text(cleanedString), NullWritable.get()); // Emit cleaned Text
@@ -168,6 +168,8 @@ public class HousingPreprocessing {
         job.setCombinerClass(CleanReducer.class);
         job.setReducerClass(CleanReducer.class);
         job.setNumReduceTasks(1);
+        job.setMapOutputKeyClass(IntWritable.class);
+        job.setMapOutputValueClass(Text.class);
         job.setOutputKeyClass(IntWritable.class);
         job.setOutputValueClass(Text.class);
         FileInputFormat.addInputPath(job, new Path(args[0]));
