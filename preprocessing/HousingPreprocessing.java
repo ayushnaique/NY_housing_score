@@ -31,7 +31,7 @@ public class HousingPreprocessing {
             String[] fields = line.split("\"");
             String[] parts = fields[0].split(","); // Split by comma
 
-            if(parts[0].equals("INDEX")) { // Skip header
+            if(parts[0].equals("ViolationID")) { // Skip header
                 // Emit the first part of the split
                 return;
             }
@@ -62,7 +62,7 @@ public class HousingPreprocessing {
             String[] fields = line.split("\"");
             String[] parts = fields[0].split(","); // Split by comma
 
-            if(parts[0].equals("INDEX")) { // Skip header
+            if(parts[0].equals("ViolationID")) { // Skip header
                 // Emit the first part of the split
                 return;
             }
@@ -93,7 +93,7 @@ public class HousingPreprocessing {
             String[] fields = line.split("\"");
             String[] parts = fields[0].split(","); // Split by comma
 
-            if(parts[0].equals("INDEX")) { // Skip header
+            if(parts[0].equals("ViolationID")) { // Skip header
                 return;
             }
             
@@ -121,7 +121,7 @@ public class HousingPreprocessing {
             String[] fields = line.split("\"");
             String[] parts = fields[0].split(","); // Split by comma
 
-            if(parts[0].equals("INDEX")) { // Skip header
+            if(parts[0].equals("ViolationID")) { // Skip header
                 return;
             }
 
@@ -138,24 +138,19 @@ public class HousingPreprocessing {
             // If there are no quotes in the line, emit the line
             if(key.get() == 1) {
                 for (Text value : values) {
-                    context.write(value, NullWritable.get()); // Emit Text as is
+                    String cleanedString = value.toString().toLowerCase(); // make lower case
+                    context.write(new Text(cleanedString), NullWritable.get()); // Emit Text as is
                 }
             } else if(key.get() == 3) {
                 for (Text value : values) {
-                    // Clean the quoted data, remove all commas
-                    String cleanedString = value.toString().split("\"")[1].replaceAll(",", "");
+                    // Split the text by the "\"" delimiter
+                    String[] fields = value.toString().split("\"");
+                    String cleanedString = fields[0] + fields[1].replace(",", "") + fields[2]; // Remove commas from the quoted part
                     // make lower case
                     cleanedString = cleanedString.toLowerCase();
                     context.write(new Text(cleanedString), NullWritable.get()); // Emit cleaned Text
                 }
             }
-        }
-
-        @Override
-        protected void cleanup(Context context) throws IOException, InterruptedException {
-            // Append the Header to the output file
-            String header = "INDEX,ViolationID,BuildingID,RegistrationID,BoroID,Borough,HouseNumber,LowHouseNumber,HighHouseNumber,StreetName,StreetCode,Postcode,Apartment,Story,Block,Lot,Class,InspectionDate,ApprovedDate,OriginalCertifyByDate,OriginalCorrectByDate,NewCertifyByDate,NewCorrectByDate,CertifiedDate,OrderNumber,NOVID,NOVDescription,NOVIssuedDate,CurrentStatusID,CurrentStatus,CurrentStatusDate,NovType,ViolationStatus,RentImpairing,Latitude,Longitude,CommunityBoard,CouncilDistrict,CensusTract,BIN,BBL,NTA";
-            context.write(new Text(header), NullWritable.get()); // Emit header
         }
     }
 
@@ -165,13 +160,11 @@ public class HousingPreprocessing {
         Job job = Job.getInstance(conf, "Housing Cleaning");
         job.setJarByClass(HousingPreprocessing.class);
         job.setMapperClass(CleanMapper.class);
-        job.setCombinerClass(CleanReducer.class);
         job.setReducerClass(CleanReducer.class);
-        job.setNumReduceTasks(1);
         job.setMapOutputKeyClass(IntWritable.class);
         job.setMapOutputValueClass(Text.class);
-        job.setOutputKeyClass(IntWritable.class);
-        job.setOutputValueClass(Text.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(NullWritable.class);
         FileInputFormat.addInputPath(job, new Path(args[0]));
         FileOutputFormat.setOutputPath(job, new Path(args[1] + "_cleaned"));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
