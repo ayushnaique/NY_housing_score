@@ -58,7 +58,7 @@ public class HousingPreprocessing {
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
         FileInputFormat.addInputPath(job, new Path(args[0]));
-        FileOutputFormat.setOutputPath(job, new Path(args[1]) + "_parts");
+        FileOutputFormat.setOutputPath(job, new Path(args[1] + "_parts"));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 }
