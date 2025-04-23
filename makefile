@@ -1,31 +1,37 @@
 # Variables
 HADOOP_CLASSPATH := `hadoop classpath`
 JAR_NAME := dataProfiling.jar
-SRC_DIR := Data_profiling
-CLASS_FILES := $(SRC_DIR)/*.class
+PRF_DIR := Data_profiling
+PRE_DIR := preprocessing
+BUILD_DIR := build
 
 # Default target
-all: compile jar
+all: clean compile jar
 
-# Compile Java files
+# Compile Java files and store .class files in the build directory
 compile:
-    javac -classpath $(HADOOP_CLASSPATH) $(SRC_DIR)/*.java
+    mkdir -p $(BUILD_DIR)
+    javac -classpath $(HADOOP_CLASSPATH) -d $(BUILD_DIR) $(PRF_DIR)/*.java $(PRE_DIR)/*.java
 
-# Create JAR file
+# Create JAR file from the compiled .class files
 jar: compile
-    jar cvf $(JAR_NAME) $(CLASS_FILES)
+    jar cvf $(JAR_NAME) -C $(BUILD_DIR) .
+
+# Run MapReduce job for preprocessing
+preprocess: jar
+    hadoop jar $(JAR_NAME) preprocessing.PreprocessCSV housing_profiling/Housing_Violations_preprocessed.csv housing_profiling/output
 
 # Run MapReduce job for shooting data
 shoot: jar
-    hadoop jar $(JAR_NAME) $(SRC_DIR)/DataProfilerCSV profiling/Shooting_Data_preprocessed.csv profiling/output
+    hadoop jar $(JAR_NAME) Data_profiling.DataProfilerCSV profiling/Shooting_Data_preprocessed.csv profiling/output
 
 # Run MapReduce job for housing data
 house: jar
-    hadoop jar $(JAR_NAME) $(SRC_DIR)/HousingProfilerCSV housing_profiling/Housing_Violations_preprocessed.csv housing_profiling/output
+    hadoop jar $(JAR_NAME) Data_profiling.HousingProfilerCSV housing_profiling/Housing_Violations_preprocessed.csv housing_profiling/output
 
 # Clean up compiled files and JAR
 clean:
-    rm -f $(CLASS_FILES) $(JAR_NAME)
+    rm -rf $(BUILD_DIR) $(JAR_NAME)
 
 # Purge HDFS folders
 purge_shoot:
