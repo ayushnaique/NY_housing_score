@@ -138,7 +138,7 @@ public class HousingPreprocessing {
             // If there are no quotes in the line, emit the line
             if(key.get() == 1) {
                 for (Text value : values) {
-                    context.write(NullWritable.get(), value); // Emit Text as is
+                    context.write(value, NullWritable.get()); // Emit Text as is
                 }
             } else if(key.get() == 3) {
                 for (Text value : values) {
