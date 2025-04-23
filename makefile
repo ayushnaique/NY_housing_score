@@ -19,7 +19,7 @@ jar: compile
 
 # Run MapReduce job for preprocessing
 preprocess: jar
-    hadoop jar $(JAR_NAME) preprocessing.PreprocessCSV housing_profiling/Housing_Violations_preprocessed.csv housing_profiling/output
+    hadoop jar $(JAR_NAME) preprocessing.HousingPreprocessing housing_profiling/Housing_Violations_preprocessed.csv housing_profiling/output
 
 # Run MapReduce job for shooting data
 shoot: jar
