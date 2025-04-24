@@ -45,9 +45,9 @@ purge_shoot:
     hdfs dfs -rm -r -skipTrash profiling/output_missing_coords
 
 purge_house:
-    hdfs dfs -rm -r -skipTrash housing_profiling/output_dates
     hdfs dfs -rm -r -skipTrash housing_profiling/output_nulls
+    hdfs dfs -rm -r -skipTrash housing_profiling/output_dates
     hdfs dfs -rm -r -skipTrash housing_profiling/output_missing_coords
 
 purge_clean_shooting:
-    hdfs dfs -rm -r -skipTrash profiling/output_cleaned
+    hdfs dfs -rm -r -skipTrash profiling/output_cleane

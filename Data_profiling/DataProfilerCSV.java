@@ -29,7 +29,7 @@ public class DataProfilerCSV {
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             String line = value.toString();
-            String[] fields = line.split(",");
+            String[] fields = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)"); // Split CSV while preserving quoted values
 
             if (!fields[2].equals("OCCUR_DATE")) { // Skip header
                 context.write(new Text("FirstDate"), new Text(fields[2]));
@@ -67,7 +67,7 @@ public class DataProfilerCSV {
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             String line = value.toString();
-            String[] fields = line.split(",");
+            String[] fields = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)"); // Split CSV while preserving quoted values
 
             if (!fields[0].equals("INDEX")) { // Skip header
                 for (int i = 0; i < fields.length; i++) {
@@ -103,7 +103,7 @@ public class DataProfilerCSV {
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             String line = value.toString();
-            String[] fields = line.split(",");
+            String[] fields = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)"); // Split CSV while preserving quoted values
     
             if(!fields[0].equals("INDEX")) { // Skip header
                 // Get the index value of the row

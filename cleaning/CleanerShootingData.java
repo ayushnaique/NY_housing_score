@@ -34,7 +34,7 @@ public class CleanerShootingData {
      * According to the data profiling output
      * Columns 12 and 13 have 10938 null values
      * Column 5 has 25596 null values
-     * Column 11 has 10938 null values
+     * Column 11 has 10972 null values
      * Column 9 has 17503 null values
      * Column 8 has 25603 null values
      * 
@@ -59,15 +59,15 @@ public class CleanerShootingData {
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             String line = value.toString();
-            String[] fields = line.split(","); // Splits the CSV file into its constituent cells
+            String[] fields = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)"); // Split CSV while preserving quoted values
 
             // Skip the header
-            if (fields[0].equals("INDEX")) {
+            if (fields[0].equals("INDEX") || fields.length < 19) { // Skip header or if coords are missing
                 return;
             }
 
             String OutputText = "";
-            for (int i = 0; i < 22; i++) { // The total number of columns will be equal to 22
+            for (int i = 0; i < fields.length; i++) {
                 if (i == 0 || i == 1 || i == 3 || i == 5 || i == 6 || i == 7 || i == 8 || 
                     i == 9 || i == 11 || i == 12 || i == 13 || i == 14 || i == 15 || i == 16) {
                     continue; // Skip the unnecessary columns
@@ -80,12 +80,16 @@ public class CleanerShootingData {
                     else
                         OutputText += "2";
                 } else if (i < fields.length) { // Make sure that the field exists
-                    if (fields[i] == null || fields[i].trim().isEmpty() || fields[i].equals("(null)"))
+                    if (fields[i] == null || fields[i].trim().isEmpty() || fields[i].equals("(null)")) {
                         OutputText += "(null)"; // Add null to the output
-                    else
-                        OutputText += fields[i];
+                    } else {
+                        // Remove commas from quoted values
+                        String cleanedField = fields[i].replaceAll("^\"|\"$", "") // Remove surrounding quotes
+                                                       .replace(",", "");      // Remove commas inside the quoted value
+                        OutputText += cleanedField;
+                    }
                 }
-                if (i != 21) {
+                if (i != fields.length - 1) {
                     OutputText += ","; // Add a comma to separate the columns
                 }
             }
@@ -102,7 +106,7 @@ public class CleanerShootingData {
             String[] fields = line.split(","); // Splits the CSV file into its constituent cells
 
             // Ensure the fields array has enough elements
-            if (fields.length <= 7) {
+            if (fields.length <= 5) {
                 return; // Skip lines with insufficient fields
             }
 
