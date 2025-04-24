@@ -107,7 +107,8 @@ public class CleanerShootingData {
             }
 
             // Dont emit the lines where the longitude and latitude are missing
-            if(fields[6].equals("(null)") || fields[6].trim().isEmpty() || fields[7].equals("(null)") || fields[7].trim().isEmpty()) {
+            if(fields[6] == null || fields[6].equals("(null)") || fields[6].trim().isEmpty() ||
+               fields[7] == null || fields[7].equals("(null)") || fields[7].trim().isEmpty()) {
                 return;
             }
 
