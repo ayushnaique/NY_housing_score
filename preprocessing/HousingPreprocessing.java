@@ -23,7 +23,13 @@ import org.apache.hadoop.mapreduce.Reducer;
 import javax.naming.Context;
 
 public class HousingPreprocessing {
-    // Mapper to split the data using the ' " ' delimiter
+    /*
+     * This Mapper and Reducer pair is used to output the frequency of the occurrence of the number of parts
+     * Due to the data being dirty, a column contains quotes in which there are commas
+     * The number of quoted lines is unknown
+     * This pair outputs the number of parts the line gets split into using the ' " ' delimiter
+     * Using this code, we found out the number of parts.
+     */
     public static class SplitMapperCount extends Mapper<LongWritable, Text, IntWritable, IntWritable> {
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
@@ -35,14 +41,11 @@ public class HousingPreprocessing {
                 // Emit the first part of the split
                 return;
             }
-
-            int index = Integer.parseInt(parts[0]);
             
             context.write(new IntWritable(fields.length), new IntWritable(1)); // Emit IntWritable
         }
     }
 
-    // Reducer to output the frequency of number of parts
     public static class SplitReducerCount extends Reducer<IntWritable, IntWritable, IntWritable, IntWritable> {
         @Override
         protected void reduce(IntWritable key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
@@ -54,38 +57,11 @@ public class HousingPreprocessing {
         }
     }
 
-    // Mapper to split the data using the ' " ' delimiter and emit the parts
-    public static class SplitMapper extends Mapper<LongWritable, Text, Text, IntWritable> {
-        @Override
-        protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
-            String line = value.toString();
-            String[] fields = line.split("\"");
-            String[] parts = fields[0].split(","); // Split by comma
-
-            if(parts[0].equals("ViolationID")) { // Skip header
-                // Emit the first part of the split
-                return;
-            }
-
-            for(int i=0; i<fields.length; i++) {
-                context.write(new Text("Part" + i + ":"), new IntWritable(1)); // Emit TextWritable
-            }
-        }
-    }
-
-    // Reducer to output the count of each part
-    public static class SplitReducer extends Reducer<Text, IntWritable, Text, IntWritable> {
-        @Override
-        protected void reduce(Text key, Iterable<IntWritable> values, Context context) throws IOException, InterruptedException {
-            int total = 0;
-            for (IntWritable value : values) {
-                total += value.get();
-            }
-            context.write(key, new IntWritable(total));
-        }
-    }
-
-    // Mapper to output (total parts, line)
+    /*
+     * This Mapper and Reducer pair is used to output the line along with the number of parts it gets split into
+     * The Mapper will emit the total number of parts in the line that is split by the ' " ' delimiter
+     * The reducer will emit the lines that have 3 parts
+     */
     public static class SplitMapperCounter extends Mapper<LongWritable, Text, IntWritable, Text> {
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
@@ -101,7 +77,6 @@ public class HousingPreprocessing {
         }
     }
 
-    // Reducer to output the line only when the total parts are equal to 3
     public static class SplitReducerCounter extends Reducer<IntWritable, Text, NullWritable, Text> {
         @Override
         protected void reduce(IntWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
@@ -113,7 +88,15 @@ public class HousingPreprocessing {
         }
     }
 
-    // Mapper for cleaning the Housing data
+    /*
+     * This Mapper and Reducer pair is used to clean the Housing Maintenance Violations data
+     * The Mapper will emit the total number of parts in the line that is split by the ' " ' delimiter
+     * Using this data the Reducer will operate on the lines that have 3 or 1 parts
+     * if there are 3 parts, it will remove the commas from the quoted part
+     * and make the string lower case
+     * if there is only 1 part, it will make the string lower case
+     * The output will be the cleaned data in the form of TextWritable
+    */
     public static class CleanMapper extends Mapper<LongWritable, Text, IntWritable, Text> {
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
@@ -125,13 +108,10 @@ public class HousingPreprocessing {
                 return;
             }
 
-            for(int i=0; i<fields.length; i++) {
-                context.write(new IntWritable(fields.length), value); // Emit Text along with the total parts, ideally should be 3 or 1
-            }
+            context.write(new IntWritable(fields.length), value); // Emit Text along with the total parts, ideally should be 3 or 1
         }
     }
 
-    // Reducer to output the cleaned data
     public static class CleanReducer extends Reducer<IntWritable, Text, Text, NullWritable> {
         @Override
         protected void reduce(IntWritable key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
@@ -166,7 +146,7 @@ public class HousingPreprocessing {
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(NullWritable.class);
         FileInputFormat.addInputPath(job, new Path(args[0]));
-        FileOutputFormat.setOutputPath(job, new Path(args[1] + "_cleaned"));
+        FileOutputFormat.setOutputPath(job, new Path(args[1] + "_preprocessed"));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 }
