@@ -145,6 +145,7 @@ public class HousingPreprocessing {
         job.setMapOutputValueClass(Text.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(NullWritable.class);
+        job.setNumReduceTasks(1);
         FileInputFormat.addInputPath(job, new Path(args[0]));
         FileOutputFormat.setOutputPath(job, new Path(args[1] + "_preprocessed"));
         System.exit(job.waitForCompletion(true) ? 0 : 1);

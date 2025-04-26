@@ -59,7 +59,7 @@ public class CleanerShootingData {
         @Override
         protected void map(LongWritable key, Text value, Context context) throws IOException, InterruptedException {
             String line = value.toString();
-            String[] fields = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)"); // Split CSV while preserving quoted values
+            String[] fields = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)", -1); // Split CSV while preserving quoted values
 
             // Skip the header
             if (fields[0].equals("INDEX") || fields.length < 19) { // Skip header or if coords are missing
@@ -103,7 +103,7 @@ public class CleanerShootingData {
         @Override
         protected void reduce(Text key, Iterable<NullWritable> values, Context context) throws IOException, InterruptedException {
             String line = key.toString().toLowerCase(); // Convert the string to lowercase
-            String[] fields = line.split(","); // Splits the CSV file into its constituent cells
+            String[] fields = line.split(",", -1); // Splits the CSV file into its constituent cells
 
             // Ensure the fields array has enough elements
             if (fields.length <= 5) {
